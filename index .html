@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find, Book, and Rent a Car Easily</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script type="module">
+        import { createIcons, Menu, X, Search, MapPin, Calendar, Car, ShieldCheck, Heart, Users, DollarSign, Clock, PhoneCall, Mail, ChevronLeft, Signal, Wifi, Battery, Eye, EyeOff, Star } from 'https://cdn.jsdelivr.net/npm/lucide@latest/dist/esm/lucide.js';
+        
+        // Expose createIcons globally to be called from the body onload and in JS functions
+        window.createIcons = () => {
+             // Wrap in try/catch in case the DOM isn't fully ready, preventing script crashes
+             try {
+                createIcons({ icons: { Menu, X, Search, MapPin, Calendar, Car, ShieldCheck, Heart, Users, DollarSign, Clock, PhoneCall, Mail, ChevronLeft, Signal, Wifi, Battery, Eye, EyeOff, Star } });
+             } catch (e) {
+                 console.error("Lucide icon initialization failed:", e);
+             }
+        };
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        .btn-primary {
+            background-image: linear-gradient(to right, #4c66ff, #1a237e);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 15px rgba(26, 35, 126, 0.4);
+        }
+        .car-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* === TESTIMONIAL STYLES === */
+        .testimonial-slider {
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+        .testimonial-card {
+            scroll-snap-align: center;
+            flex-shrink: 0;
+            width: 85vw;
+            min-height: 400px; 
+            display: flex; 
+            flex-direction: column;
+            padding: 0; 
+            border-radius: 1rem; 
+        }
+        @media (min-width: 768px) {
+             .testimonial-card {
+                width: calc(50% - 1.5rem); 
+                max-width: 550px; 
+                flex-direction: row;
+             }
+        }
+
+        .testimonial-image-wrapper {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 1rem 1rem 0 0; 
+        }
+        @media (min-width: 768px) {
+            .testimonial-image-wrapper {
+                width: 50%;
+                height: 100%;
+                min-height: 100%;
+                border-radius: 1rem 0 0 1rem; 
+            }
+        }
+        .testimonial-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .testimonial-content {
+            width: 100%;
+            padding: 1.5rem; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        @media (min-width: 768px) {
+            .testimonial-content {
+                width: 50%;
+                padding: 2rem; 
+            }
+        }
+
+        /* Modal styles: IMPORTANT: Use 'fixed' and 'flex' to center */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Darker overlay for clarity */
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .search-input {
+            padding-left: 3rem !important;
+            height: 3.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+            box-shadow: none;
+            transition: border-color 0.15s ease-in-out;
+        }
+        .search-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        .hero-background-effect {
+            background: radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.6) 0%, rgba(255, 255, 255, 0) 65%);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="text-gray-800" onload="window.createIcons()">
+
+    <div id="mobile-menu" class="fixed inset-0 z-50 hidden bg-white transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden" role="dialog" aria-modal="true">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-8">
+                <div class="text-2xl font-bold text-blue-700">Rent<span class="text-gray-800">Cars</span></div>
+                <button onclick="toggleMobileMenu()" class="text-gray-800 p-2 rounded-full hover:bg-gray-100" aria-label="Close menu">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <nav class="flex flex-col space-y-4 text-lg flex-grow">
+                <a href="#home" class="p-2 rounded-lg hover:bg-blue-50" onclick="toggleMobileMenu()">Home</a>
+                <a href="#about" class="p-2 rounded-lg hover:bg-blue-50" onclick="toggleMobileMenu()">About Us</a>
+                <a href="#deals" class="p-2 rounded-lg hover:bg-blue-50" onclick="toggleMobileMenu()">Rental Deals</a>
+                <a href="#reviews" class="p-2 rounded-lg hover:bg-blue-50" onclick="toggleMobileMenu()">Reviews</a>
+                <a href="#contact" class="p-2 rounded-lg hover:bg-blue-50" onclick="toggleMobileMenu()">Contact</a>
+                <button onclick="toggleMobileMenu(); openModal('signin-modal')" class="mt-auto p-3 rounded-lg btn-primary text-white text-center">Sign In</button>
+            </nav>
+        </div>
+    </div>
+
+    <header class="sticky top-0 z-40 bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex justify-between items-center">
+            <a href="#" class="text-xl md:text-2xl font-extrabold text-blue-700 flex items-center space-x-2">
+                <i data-lucide="car" class="w-6 h-6 md:w-8 md:h-8 text-blue-700"></i>
+                <span>Rent<span class="text-gray-800">Cars</span></span>
+            </a>
+            <nav class="hidden md:flex space-x-4 lg:space-x-8 text-sm font-medium">
+                <a href="#home" class="hover:text-blue-600 transition duration-150">Home</a>
+                <a href="#about" class="hover:text-blue-600 transition duration-150">About Us</a>
+                <a href="#deals" class="hover:text-blue-600 transition duration-150">Rental Deals</a>
+                <a href="#reviews" class="hover:text-blue-600 transition duration-150">Reviews</a>
+                <a href="#contact" class="hover:text-blue-600 transition duration-150">Contact</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <button onclick="openModal('signin-modal')" class="hidden md:block px-5 py-2 text-sm font-medium text-white rounded-full btn-primary shadow-lg">
+                    Sign In
+                </button>
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-full hover:bg-gray-100" aria-label="Open menu">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section id="home" class="relative overflow-hidden pt-6 md:pt-16 pb-12 md:pb-24 bg-white hero-background-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-1/2 w-full mb-8 md:mb-0 text-center md:text-left">
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-4">
+                        Find, book and rent a car <span class="text-blue-700">easily</span>
+                    </h1>
+                    <p class="text-base md:text-xl text-gray-600 mb-6 md:mb-8 max-w-xl mx-auto md:mx-0">
+                        Get a car for rent anytime and anywhere you need. Simple booking process and transparent pricing.
+                    </p>
+
+                    <div class="flex justify-center md:justify-start space-x-3 md:space-x-4 mb-6 md:mb-10">
+                        <a href="https://play.google.com/store" target="_blank" class="inline-block"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/2560px-Google_Play_Store_badge_EN.svg.png" alt="Google Play" class="h-10 md:h-12 rounded-lg"></a>
+                        <a href="https://www.apple.com/app-store/" target="_blank" class="inline-block"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Download_on_the_App_Store_Badge.svg/2560px-Download_on_the_App_Store_Badge.svg.png" alt="App Store" class="h-10 md:h-12 rounded-lg"></a>
+                    </div>
+                </div>
+
+                <div class="md:w-1/2 w-full flex justify-center md:justify-end">
+                    <img src="https://di-uploads-pod15.dealerinspire.com/bluegrassmotorsport/uploads/2023/08/2308-Porsche-718-Cayman-GT4-RS-Trim.jpg" alt="Porsche 718 Cayman GT4 RS" class="rounded-xl w-full max-w-sm lg:max-w-xl object-cover transform md:-translate-y-10 md:translate-x-4 shadow-2xl" onerror="this.onerror=null;this.src='https://placehold.co/800x600/1e40af/ffffff?text=Premium+Sports+Car';">
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mb-16 md:-mb-10 mt-6 md:mt-0">
+            <div class="bg-white p-4 md:p-6 shadow-2xl rounded-xl border border-gray-100">
+                <form class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-4 items-center" onsubmit="event.preventDefault(); openModal('snackbar-modal'); document.getElementById('snackbar-message').textContent = 'Search Initiated! (Demo)';">
+                    <div class="col-span-1">
+                        <div class="relative">
+                            <i data-lucide="map-pin" class="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-600"></i>
+                            <input type="text" id="location" placeholder="Search your location" class="search-input w-full pl-12 pr-4 py-2 rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="col-span-1">
+                        <div class="relative">
+                            <i data-lucide="calendar" class="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-600"></i>
+                            <input type="text" id="pickup" placeholder="Pickup date" onfocus="(this.type='datetime-local')" onblur="if(!this.value)this.type='text'" class="search-input w-full pl-12 pr-4 py-2 rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="col-span-1">
+                        <div class="relative">
+                            <i data-lucide="calendar" class="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-600"></i>
+                            <input type="text" id="return" placeholder="Return date" onfocus="(this.type='datetime-local')" onblur="if(!this.value)this.type='text'" class="search-input w-full pl-12 pr-4 py-2 rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="col-span-1">
+                        <button type="submit" class="w-full h-[3.5rem] px-4 py-2 text-white font-semibold rounded-lg btn-primary shadow-lg hover:shadow-xl flex items-center justify-center">
+                            <i data-lucide="search" class="w-5 h-5 mr-2"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <main>
+        <section id="steps" class="pt-24 md:pt-32 pb-12 md:pb-20 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <span class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50 border border-blue-200 rounded-full">
+                    How it Work
+                </span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-10 md:mb-12">Rent with following 3 working steps</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                    <div class="p-6 bg-white rounded-xl shadow-lg flex flex-col items-center">
+                        <div class="p-4 bg-blue-100 rounded-full mb-4">
+                            <i data-lucide="map-pin" class="w-8 h-8 text-blue-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Choose location</h3>
+                        <p class="text-gray-600 text-base">Choose your and find your best car</p>
+                    </div>
+
+                    <div class="p-6 bg-white rounded-xl shadow-lg flex flex-col items-center">
+                        <div class="p-4 bg-blue-100 rounded-full mb-4">
+                            <i data-lucide="calendar" class="w-8 h-8 text-blue-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Pick-up date</h3>
+                        <p class="text-gray-600 text-base">Select your pickup date and time to book your car</p>
+                    </div>
+
+                    <div class="p-6 bg-white rounded-xl shadow-lg flex flex-col items-center">
+                        <div class="p-4 bg-blue-100 rounded-full mb-4">
+                            <i data-lucide="car" class="w-8 h-8 text-blue-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Book your car</h3>
+                        <p class="text-gray-600 text-base">Book your car and we will deliver it directly to you</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-8 md:py-12 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap justify-center md:justify-around items-center gap-6 opacity-60">
+                    <img src="https://assets.stickpng.com/images/580b57fcd9996e24bc43c47e.png" alt="Honda Logo" class="h-6 md:h-10 object-contain grayscale hover:grayscale-0 transition duration-300" onerror="this.onerror=null;this.src='https://placehold.co/100x40/f1f5f9/94a3b8?text=Honda';">
+                    <img src="https://logolook.net/wp-content/uploads/2023/07/Jaguar-Logo-PNG.png" alt="Jaguar Logo" class="h-6 md:h-10 object-contain grayscale hover:grayscale-0 transition duration-300" onerror="this.onerror=null;this.src='https://placehold.co/100x40/f1f5f9/94a3b8?text=Jaguar';">
+                    <img src="https://assets.stickpng.com/images/580b57fcd9996e24bc43c4d5.png" alt="Volvo Logo" class="h-6 md:h-10 object-contain grayscale hover:grayscale-0 transition duration-300" onerror="this.onerror=null;this.src='https://placehold.co/100x40/f1f5f9/94a3b8?text=Volvo';">
+                    <img src="https://assets.stickpng.com/images/580b57fcd9996e24bc43c483.png" alt="Audi Logo" class="h-6 md:h-10 object-contain grayscale hover:grayscale-0 transition duration-300" onerror="this.onerror=null;this.src='https://placehold.co/100x40/f1f5f9/94a3b8?text=Audi';">
+                    <img src="https://assets.stickpng.com/images/580b57fcd9996e24bc43c49a.png" alt="Mercedes Logo" class="h-6 md:h-10 object-contain grayscale hover:grayscale-0 transition duration-300" onerror="this.onerror=null;this.src='https://placehold.co/100x40/f1f5f9/94a3b8?text=Mercedes';">
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-12 md:py-20 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-10 md:gap-16">
+                <div class="md:w-1/2 w-full flex justify-center order-2 md:order-1">
+                    <img src="https://ccarprice.com/products/Audi_R8_Manual_2024.jpg" 
+                         alt="Premium silver car" 
+                         class="rounded-xl shadow-2xl w-full max-w-lg object-cover"
+                         onerror="this.onerror=null;this.src='https://placehold.co/800x600/1e40af/ffffff?text=Premium+Rental+Experience';">
+                </div>
+
+                <div class="md:w-1/2 w-full order-1 md:order-2">
+                    <span class="text-sm font-bold text-blue-600 uppercase tracking-widest mb-2 block">Premium service</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-6">
+                        We offer the best experience with our rental deals
+                    </h2>
+                    <p class="text-gray-600 text-base mb-6 md:mb-8">
+                        Our commitment is to provide you with the smoothest, most secure, and most enjoyable rental experience possible.
+                    </p>
+
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <i data-lucide="shield-check" class="w-6 h-6 text-blue-600 mr-3 mt-1 flex-shrink-0"></i>
+                            <div>
+                                <h4 class="font-semibold text-lg">Peace of mind guaranteed</h4>
+                                <p class="text-gray-500 text-sm">Every rental includes full insurance coverage.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <i data-lucide="heart" class="w-6 h-6 text-blue-600 mr-3 mt-1 flex-shrink-0"></i>
+                            <div>
+                                <h4 class="font-semibold text-lg">Experience our unlimited mileage</h4>
+                                <p class="text-gray-500 text-sm">Travel as far as you want without worrying about limits.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <i data-lucide="clock" class="w-6 h-6 text-blue-600 mr-3 mt-1 flex-shrink-0"></i>
+                            <div>
+                                <h4 class="font-semibold text-lg">24/7 dedicated support</h4>
+                                <p class="text-gray-500 text-sm">Our team is always ready to assist you, day or night.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="deals" class="py-12 md:py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">Most popular cars rental deals</h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                    <div class="car-card bg-white rounded-xl shadow-lg p-5 border border-gray-100">
+                        <img src="https://www.pngplay.com/wp-content/uploads
